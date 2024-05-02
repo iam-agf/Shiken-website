@@ -1,50 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import { AdenaGetAccount } from './AdenaInterfaces';
-import axios from 'axios';
-import cheerio from 'cheerio';
+import { useState, useEffect } from 'react';
+import { GnoWSProvider } from '@gnolang/gno-js-client';
+import { IAccountContext } from './context/accountContext.types.js';
+import { IProviderContext } from './context/providerContext.types.js';
+import AccountContext from './context/AccountContext';
 
-type Props = {
-  adena?: any;
-};
+import ProviderContext from './context/ProviderContext';
 
+import Config from './config';
 
-function App({ adena }: Props) {
-  const [data, setData] = useState<AdenaGetAccount | null>(null)
-  const [CallExamsAvailable, setCallExamsAvailable] = useState<any | null>(null)
+import Home from './components/Home'
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        // Getting information of the user and the address involved
-        const valueGetAccount = await adena.GetAccount();
-        setData(valueGetAccount);
-        console.log(valueGetAccount)
-        const pendingExams = `http://127.0.0.1:8888/r/dev/shikenrepository:NumberPendingExams/${valueGetAccount.data.address}`
+const App = () => {
+  const [address, setAddress] = useState<string | null>(null);
+  const [owner, setOwner] = useState<string | null>(null);
+  const [chainID, setChainID] = useState<string | null>(null);
 
-        axios.get(pendingExams).then(function (response: any) {
-          const tempElement = document.createElement('div');
-          tempElement.innerHTML = response.data;
-          const realmRender = tempElement.querySelector('#realm_render');
-          const availableExams = realmRender ? realmRender.textContent : "";
-          console.log(availableExams);
-          setCallExamsAvailable(availableExams);
-        })
-      } catch (error) {
-        console.log(error)
-      }
-    }
-    fetchData();
-  }, []);
+  // Only God knows
+  const accountContext: IAccountContext = {
+    address,
+    chainID,
 
-  return (
-    <div className="App">
-      <header className="App-header">
-        <h2>The address registered is: <code>{data ? data.data.address : "Fetching information..."} ({data ? data.data.coins : ""})</code></h2>
-        <hr />
-        <h2>Number of Pending Exams: {CallExamsAvailable ? CallExamsAvailable : ""}</h2>
-      </header>
-    </div>
+    setAddress,
+    setChainID
+  };
+
+  // Provides the websocket required to connect to chain
+  const [provider, setProvider] = useState<GnoWSProvider | null>(
+    new GnoWSProvider(Config.CHAIN_RPC)
   );
-}
+
+  useEffect(() => { }, [provider]);
+
+  // Still not sure
+  const wsProvider: IProviderContext = {
+    provider,
+    setProvider
+  };
+  return (
+    <ProviderContext.Provider value={wsProvider}>
+      <AccountContext.Provider value={accountContext}>
+        <Home />
+      </AccountContext.Provider>
+    </ProviderContext.Provider>
+  );
+};
 
 export default App;
