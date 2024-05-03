@@ -8,11 +8,20 @@ import ProviderContext from './context/ProviderContext';
 
 import Config from './config';
 
-import Home from './components/Home'
-
+import PageApply from './pages/pageApply.jsx';
+import PageHome from './pages/pageHome.jsx';
+import PageMyData from './pages/pageMyData.jsx';
+import PageHowTo from './pages/pageHowTo.jsx';
+import PageAddQuestion from './pages/pageAddQuestion.jsx';
+import PageAddExam from './pages/pageAddExam.jsx';
+import PageEditQuestion from './pages/pageEditQuestion.jsx';
+import PageEditExam from './pages/pageEditExam.jsx';
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom"
 const App = () => {
   const [address, setAddress] = useState<string | null>(null);
-  const [owner, setOwner] = useState<string | null>(null);
   const [chainID, setChainID] = useState<string | null>(null);
 
   // Only God knows
@@ -36,10 +45,46 @@ const App = () => {
     provider,
     setProvider
   };
+
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: <PageHome />,
+    },
+    {
+      path: "/apply",
+      element: <PageApply />,
+    },
+    {
+      path: "/howTo",
+      element: <PageHowTo />,
+    },
+    {
+      path: "/addQuestion",
+      element: <PageAddQuestion />,
+    },
+    {
+      path: "/editQuestion",
+      element: <PageEditQuestion />,
+    },
+    {
+      path: "/addExam",
+      element: <PageAddExam />,
+    },
+    {
+      path: "/editExam",
+      element: <PageEditExam />,
+    },
+    {
+      path: "/myData",
+      element: <PageMyData />,
+    },
+  ])
+
   return (
     <ProviderContext.Provider value={wsProvider}>
       <AccountContext.Provider value={accountContext}>
-        <Home />
+      <RouterProvider router={router} />
       </AccountContext.Provider>
     </ProviderContext.Provider>
   );
