@@ -8,14 +8,14 @@ import ProviderContext from './context/ProviderContext';
 
 import Config from './config';
 
-import PageApply from './pages/pageApply.jsx';
-import PageHome from './pages/pageHome.jsx';
-import PageMyData from './pages/pageMyData.jsx';
-import PageHowTo from './pages/pageHowTo.jsx';
-import PageAddQuestion from './pages/pageAddQuestion.jsx';
-import PageAddExam from './pages/pageAddExam.jsx';
-import PageEditQuestion from './pages/pageEditQuestion.jsx';
-import PageEditExam from './pages/pageEditExam.jsx';
+import PageApply from './pages/pageApply';
+import PageHome from './pages/pageHome';
+import PageMyData from './pages/pageMyData';
+import PageHowTo from './pages/pageHowTo';
+import PageAddQuestion from './pages/pageAddQuestion';
+import PageAddExam from './pages/pageAddExam';
+import PageEditQuestion from './pages/pageEditQuestion';
+import PageEditExam from './pages/pageEditExam';
 import {
   createBrowserRouter,
   RouterProvider,
@@ -84,7 +84,7 @@ const App = () => {
   return (
     <ProviderContext.Provider value={wsProvider}>
       <AccountContext.Provider value={accountContext}>
-      <RouterProvider router={router} />
+        <RouterProvider router={router} />
       </AccountContext.Provider>
     </ProviderContext.Provider>
   );
