@@ -4,11 +4,6 @@ import NavHeader from './NavHeader';
 import { parseResponse } from '../pieces/supportFuns';
 import { FlexboxGrid } from 'rsuite';
 import 'rsuite/FlexboxGrid/styles/index.css';
-import {
-    EMessageType,
-    IAccountInfo
-} from '../services/adena/adena.types';
-import { AdenaService } from '../services/adena/adena';
 import Connect from '../services/adena/connectButton';
 
 const Header = () => {
