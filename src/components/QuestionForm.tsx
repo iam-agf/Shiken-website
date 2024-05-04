@@ -7,6 +7,7 @@ import config from "../config";
 
 type KindValue = "0" | "1" | "2";
 const openQ = "2" as KindValue
+const TrueFalseQ = "1" as KindValue
 
 const QuestionForm = () => {
     const { address } = useContext(AccountContext)
@@ -17,6 +18,7 @@ const QuestionForm = () => {
     const [Option3, setOption3] = useState("3")
     const [Option4, setOption4] = useState("4")
     const [answer, setAnswer] = useState("2")
+    const [AES, setAES] = useState("")
 
     const sendQuestion = async () => {
         let q: Question = {
@@ -35,23 +37,26 @@ const QuestionForm = () => {
         } else {
             q.kind = kind as string
         }
-        if (Option1 == "" || Option2 == "" || Option3 == "" || Option4 == "") {
+        if (Option1 === "" || Option2 === "" || Option3 === "" || Option4 === "") {
             console.error("An option is empty")
         } else {
             let options = `${Option1},${Option2},${Option3},${Option4}`
             q.options = options
         }
-        if (answer !== Option1 && answer !== Option2 && answer !== Option3 && answer !== Option4) {
+        if (kind !== "1" && (answer !== Option1 && answer !== Option2 && answer !== Option3 && answer !== Option4)) {
             console.error("Answer not in options")
         } else {
             q.answer = answer
         }
-        console.log(q)
         if (address) {
-            if (q.kind == "2"){
+            if (q.kind === "2") {
                 q.options = ""
                 q.answer = ""
             }
+            if (q.kind === "1") {
+                q.options = `"True","False","Can't be determined","No answer"`
+            }
+            console.log(q)
             let response = await AdenaService.sendTransaction(
                 [
                     {
@@ -85,6 +90,15 @@ const QuestionForm = () => {
             <br />
             <br />
             <form>
+                <label>Encryption password (This password is only responsibility of the creator, and shouldn't be shared):
+                    <input
+                        type="text"
+                        value={statement}
+                        onChange={(e) => setAES(e.target.value)}
+                    />
+                </label>
+                <br />
+                <hr />
                 <label>Enter your Question:
                     <input
                         type="text"
@@ -93,6 +107,7 @@ const QuestionForm = () => {
                     />
                 </label>
                 <br />
+                <hr />
                 <label>Enter the kind of question:
                     <input type='radio' name='questionKind' id='0' value='0' onChange={e => setKind(e.target.value as KindValue)} />
                     <input type='radio' name='questionKind' id='1' value='1' onChange={e => setKind(e.target.value as KindValue)} />
@@ -101,34 +116,40 @@ const QuestionForm = () => {
                 <br />
                 {kind !== openQ ?
                     <>
-                        <label>Enter Options:
-                            <input
-                                type="text"
-                                onChange={(e) => setOption1(e.target.value)}
-                            />
-                            <input
-                                type="text"
-                                onChange={(e) => setOption2(e.target.value)}
-                            />
-                            <input
-                                type="text"
-                                onChange={(e) => setOption3(e.target.value)}
-                            />
-                            <input
-                                type="text"
-                                onChange={(e) => setOption4(e.target.value)}
-                            />
-                        </label>
-                        <br />
-                        <label>Choose answer
-                            <input type='radio' name='answer' id={`${Option1}`} value={Option1} onChange={e => setAnswer(e.target.value)} />
-                            <input type='radio' name='answer' id={`${Option2}`} value={Option2} onChange={e => setAnswer(e.target.value)} />
-                            <input type='radio' name='answer' id={`${Option3}`} value={Option3} onChange={e => setAnswer(e.target.value)} />
-                            <input type='radio' name='answer' id={`${Option4}`} value={Option4} onChange={e => setAnswer(e.target.value)} />
-                        </label>
+
+                        {kind !== TrueFalseQ ?
+                            <>
+                                <hr />
+                                <label>Enter Options:
+                                    <input type="text" onChange={(e) => setOption1(e.target.value)} />
+                                    <input type="text" onChange={(e) => setOption2(e.target.value)} />
+                                    <input type="text" onChange={(e) => setOption3(e.target.value)} />
+                                    <input type="text" onChange={(e) => setOption4(e.target.value)} />
+                                </label>
+                                <br />
+                                <hr />
+                                <label>Choose answer
+                                    <input type='radio' name='answer' id={`${Option1}`} value={Option1} onChange={e => setAnswer(e.target.value)} />
+                                    <input type='radio' name='answer' id={`${Option2}`} value={Option2} onChange={e => setAnswer(e.target.value)} />
+                                    <input type='radio' name='answer' id={`${Option3}`} value={Option3} onChange={e => setAnswer(e.target.value)} />
+                                    <input type='radio' name='answer' id={`${Option4}`} value={Option4} onChange={e => setAnswer(e.target.value)} />
+                                </label>
+                            </>
+                            :
+                            <>
+                                <hr />
+                                <label>Choose answer (TF)
+                                    <input type='radio' name='answer' id="True" value="True" onChange={e => setAnswer(e.target.value)} />
+                                    <input type='radio' name='answer' id="False" value="False" onChange={e => setAnswer(e.target.value)} />
+                                    <input type='radio' name='answer' id="Can't be determined" value="Can't be determined" onChange={e => setAnswer(e.target.value)} />
+                                    <input type='radio' name='answer' id="No answer" value="No answer" onChange={e => setAnswer(e.target.value)} />
+                                </label>
+                                <br />
+                            </>
+                        }
                     </>
                     : <></>}
-                <br />
+                <hr />
                 <button type="button" onClick={sendQuestion}>
                     Send Question
                 </button>
