@@ -12,7 +12,6 @@ const Connect: FC<IConnectProps> = () => {
 
     const handleWalletConnect = async () => {
         setIsLoading(true);
-
         try {
             // Attempt to establish a connection
             await AdenaService.establishConnection("");
@@ -24,7 +23,6 @@ const Connect: FC<IConnectProps> = () => {
             await AdenaService.switchNetwork(Config.CHAIN_ID);
 
             setAddr(info.address);
-            console.log(addr);
             // Update the account context
             setAddress(info.address);
             setChainID(Config.CHAIN_ID);
