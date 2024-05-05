@@ -15,7 +15,7 @@ const ExamForm = () => {
     const [questions, setQuestions] = useState<string>("")
     const [description, setDescription] = useState<string>("")
     const [applicantString, setApplicantString] = useState<string>("")
-    
+
     // Encryption values
     const [AES, setAES] = useState("")
     const [AESHex, setAESHex] = useState("")
@@ -28,7 +28,7 @@ const ExamForm = () => {
     const [eQuestions, setEQuestions] = useState<string>(questions)
     const [eDescription, setEDescription] = useState<string>(description)
     const [eApplicantString, setEApplicantString] = useState<string>(applicantString)
-    
+
 
     // Generates the RSA keys for the encryption process
     useEffect(() => {
@@ -42,7 +42,7 @@ const ExamForm = () => {
     // AES key for user
     useEffect(() => {
 
-     }, [AES])
+    }, [AES])
 
     // encrypts all
     useEffect(() => {
@@ -71,7 +71,7 @@ const ExamForm = () => {
         } else {
             e.title = title
         }
-        
+
         // description verification
         if (description.length < 5) {
             console.error("Size of description is very short")
@@ -117,7 +117,7 @@ const ExamForm = () => {
         <>
             <br />
             <br />
-            <h2>Add your question</h2>
+            <h2>Add your Exam</h2>
             <form>
                 <label>Encryption password (This password is only responsibility of the creator, and shouldn't be shared):
                     <input
@@ -167,9 +167,9 @@ const ExamForm = () => {
                     Send Exam
                 </button>
             </form>
+            <br />
             <div>
                 <h2>You're sending</h2>
-                <br />
                 <hr />
                 <h4>Title: </h4>
                 <p>{eTitle}</p>
