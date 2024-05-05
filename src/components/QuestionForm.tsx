@@ -1,9 +1,11 @@
 import { useContext, useEffect, useState } from "react";
-import { Question } from "../pieces/Question.types";
+import { Question } from "../pieces/Realm.types";
 import { AdenaService } from "../services/adena/adena";
 import { EMessageType } from "../services/adena/adena.types";
 import AccountContext from "../context/AccountContext";
 import config from "../config";
+import forge from 'node-forge';
+import "../style.css"
 
 type KindValue = "0" | "1" | "2";
 const openQ = "2" as KindValue
@@ -11,6 +13,8 @@ const TrueFalseQ = "1" as KindValue
 
 const QuestionForm = () => {
     const { address } = useContext(AccountContext)
+
+    // Question data
     const [statement, setStatement] = useState<string>("")
     const [kind, setKind] = useState<KindValue>("1")
     // Options. Will join them in Options
@@ -20,8 +24,29 @@ const QuestionForm = () => {
     const [Option4, setOption4] = useState("4")
     const [Options, setOptions] = useState("1,2,3,4")
     const [answer, setAnswer] = useState("2")
-    const [AES, setAES] = useState("")
 
+    // Encryption values
+    const [AES, setAES] = useState("")
+    const [AESHex, setAESHex] = useState("")
+    const [pub, setPub] = useState<string>()
+    const [priv, setPriv] = useState<string>()
+    const [pubKey, setPubKey] = useState<forge.pki.rsa.PublicKey>()
+
+    // Encrypted data
+    const [eStatement, setEStatement] = useState(statement)
+    const [eAnswer, setEAnswer] = useState(answer)
+    const [eOptions, setEOptions] = useState(Options)
+
+    // Generates the RSA keys for the encryption process
+    useEffect(() => {
+        // RSA keys
+        const { publicKey, privateKey }: forge.pki.rsa.KeyPair = forge.pki.rsa.generateKeyPair(2048, 0x10001);
+        setPub(forge.pki.publicKeyToPem(publicKey))
+        setPubKey(publicKey)
+        setPriv(forge.pki.privateKeyToPem(privateKey))
+    }, [])
+
+    // Updates information related to options
     useEffect(() => {
         let options: string = ""
         if (Option1 !== "") {
@@ -31,8 +56,8 @@ const QuestionForm = () => {
     },
         [Option1, Option2, Option3, Option4])
 
-    const updateKindOptions = (kind: string) => {
-        setKind(kind as KindValue)
+    // Updates the options and answer based on kind
+    useEffect(() => {
         if (kind === "0") {
             setOption1("1")
             setOption2("2")
@@ -53,7 +78,24 @@ const QuestionForm = () => {
             setOptions("")
             setAnswer("")
         }
-    }
+    }, [kind])
+
+    // AES key for user
+    useEffect(() => {
+
+     }, [AES])
+
+    // encrypts all
+    useEffect(() => {
+        if (pubKey) {
+            let eS: string = forge.util.encode64(pubKey!.encrypt(statement))
+            let eO: string = forge.util.encode64(pubKey!.encrypt(Options))
+            let eA: string = forge.util.encode64(pubKey!.encrypt(answer))
+            setEAnswer(eA)
+            setEStatement(eS)
+            setEOptions(eO)
+        }
+    }, [answer, Options, statement])
 
     const sendQuestion = async () => {
         let q: Question = {
@@ -123,7 +165,6 @@ const QuestionForm = () => {
                 <label>Encryption password (This password is only responsibility of the creator, and shouldn't be shared):
                     <input
                         type="text"
-                        value={statement}
                         onChange={(e) => setAES(e.target.value)}
                     />
                 </label>
@@ -139,9 +180,9 @@ const QuestionForm = () => {
                 <br />
                 <hr />
                 <label>Enter the kind of question:
-                    <input type='radio' name='questionKind' id='0' value='0' onChange={e => updateKindOptions(e.target.value)} />
-                    <input type='radio' name='questionKind' id='1' value='1' onChange={e => updateKindOptions(e.target.value)} />
-                    <input type='radio' name='questionKind' id='2' value='2' onChange={e => updateKindOptions(e.target.value)} />
+                    <input type='radio' name='questionKind' id='0' value='0' onChange={e => setKind(e.target.value as KindValue)} />
+                    <input type='radio' name='questionKind' id='1' value='1' onChange={e => setKind(e.target.value as KindValue)} />
+                    <input type='radio' name='questionKind' id='2' value='2' onChange={e => setKind(e.target.value as KindValue)} />
                 </label>
                 <br />
                 {kind !== openQ ?
@@ -188,7 +229,7 @@ const QuestionForm = () => {
                 <br />
                 <hr />
                 <h4>Statement: </h4>
-                <p>{statement}</p>
+                <p>{eStatement}</p>
                 <br />
                 <hr />
                 <h4>Kind:</h4>
@@ -196,11 +237,11 @@ const QuestionForm = () => {
                 <br />
                 <hr />
                 <h4>Options:</h4>
-                <p>{Options}</p>
+                <p>{eOptions}</p>
                 <br />
                 <hr />
                 <h4>Answer:</h4>
-                <p>{answer}</p>
+                <p>{eAnswer}</p>
                 <br />
                 <hr />
             </div>
