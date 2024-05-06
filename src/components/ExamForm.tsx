@@ -28,6 +28,8 @@ const ExamForm = () => {
     const [eQuestions, setEQuestions] = useState<string>(questions)
     const [eDescription, setEDescription] = useState<string>(description)
     const [eApplicantString, setEApplicantString] = useState<string>(applicantString)
+    const [eHashAES, setEHashAES] = useState<string>(applicantString)
+    const [eHashRSA, setEHashRSA] = useState<string>(applicantString)
 
 
     // Generates the RSA keys for the encryption process
@@ -41,7 +43,29 @@ const ExamForm = () => {
 
     // AES key for user
     useEffect(() => {
-
+        if (priv && AES != "") {
+            // SHA256 Generator
+            const md = forge.md.sha256.create();
+            // Hashes the password of the customer to a string of 64 bytes
+            md.update(AES);
+            // Truncates to 32 bytes
+            const sha256String = md.digest().toHex();
+            /// Getting the Key and the IV for the AES encrypt
+            const sha256Key = sha256String.substring(0, 32)
+            const sha256IV = sha256String.substring(33, 64)
+            // Converts this 32-string into a key for the AES encryption
+            const keyBytes = forge.util.createBuffer(sha256Key);
+            // Starts encrypting by creating a encrypter generator using the given key
+            const cipher = forge.cipher.createCipher('AES-CBC', keyBytes);
+            // Converts the string into bytes
+            const messageBytes = forge.util.createBuffer(priv, 'utf8');
+            // Starts by giving an iv key of 32 bytes
+            cipher.start({ iv: sha256IV });
+            cipher.update(messageBytes);
+            cipher.finish();
+            const encryptedHex = cipher.output.toHex();
+            setEHashRSA(encryptedHex);
+        }
     }, [AES])
 
     // encrypts all
@@ -185,6 +209,10 @@ const ExamForm = () => {
                 <hr />
                 <h4>Applicants:</h4>
                 <p>{eApplicantString}</p>
+                <br />
+                <hr />
+                <h4>Encrypted RSA hash:</h4>
+                <p>{eHashRSA}</p>
                 <br />
                 <hr />
             </div>
