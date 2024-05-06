@@ -17,17 +17,18 @@ const PageMyData = () => {
     const [pendingExams, setPendingExams] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchData = async () => {
-            console.log(200, provider, address, provider && address != null)
-            if (provider && address != null) {
-                console.log(123123123)
-                provider.evaluateExpression('gno.land/r/dev/shikenrepository', `GetMyPendingExams("${address}")`)
-                    .then((pExams: any) => parseResponse(pExams))
-                    .then((data: any) => setPendingExams(data))
-                    .catch((error: any) => console.log(error));
+        if (provider && address) {
+            const fetchData = async () => {
+                console.log(200, provider, address, provider && address != null)
+                if (provider && address != null) {
+                    provider.evaluateExpression('gno.land/r/dev/shikenrepository', `GetMyPendingExams("${address}")`)
+                        .then((pExams: any) => parseResponse(pExams))
+                        .then((data: any) => setPendingExams(data))
+                        .catch((error: any) => console.log(error));
+                };
             };
-        };
-        fetchData();
+            fetchData();
+        }
     }, [provider, address]);
 
     console.log(pendingExams);

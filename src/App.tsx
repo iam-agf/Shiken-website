@@ -16,10 +16,12 @@ import PageAddQuestion from './pages/pageAddQuestion';
 import PageAddExam from './pages/pageAddExam';
 import PageEditQuestion from './pages/pageEditQuestion';
 import PageEditExam from './pages/pageEditExam';
+import PageReadData from './pages/pageReadData';
 import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom"
+
 const App = () => {
   const [address, setAddress] = useState<string | null>(null);
   const [chainID, setChainID] = useState<string | null>(null);
@@ -50,6 +52,10 @@ const App = () => {
     {
       path: "/",
       element: <PageHome />,
+    },
+    {
+      path: "/readData",
+      element: <PageReadData />,
     },
     {
       path: "/apply",
