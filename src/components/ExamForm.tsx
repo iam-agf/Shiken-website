@@ -18,8 +18,7 @@ const ExamForm = () => {
 
     // Encryption values
     const [AES, setAES] = useState("")
-    const [AESHex, setAESHex] = useState("")
-    const [pub, setPub] = useState<string>()
+    const [AESContent, setAESContent] = useState("")
     const [priv, setPriv] = useState<string>()
     const [pubKey, setPubKey] = useState<forge.pki.rsa.PublicKey>()
 
@@ -32,16 +31,15 @@ const ExamForm = () => {
     const [eHashRSA, setEHashRSA] = useState<string>(applicantString)
 
 
-    // Generates the RSA keys for the encryption process
+    // Generates the RSA keys for the encryption process of random AES for content
     useEffect(() => {
         // RSA keys
         const { publicKey, privateKey }: forge.pki.rsa.KeyPair = forge.pki.rsa.generateKeyPair(2048, 0x10001);
-        setPub(forge.pki.publicKeyToPem(publicKey))
         setPubKey(publicKey)
         setPriv(forge.pki.privateKeyToPem(privateKey))
     }, [])
 
-    // AES key for user
+    // AES key for user to encrypt private key
     useEffect(() => {
         if (priv && AES != "") {
             // SHA256 Generator
@@ -68,19 +66,60 @@ const ExamForm = () => {
         }
     }, [AES])
 
-    // encrypts all
+    // encrypts all content of exam
     useEffect(() => {
         if (pubKey) {
-            let eT: string = forge.util.encode64(pubKey!.encrypt(title))
-            let eQ: string = forge.util.encode64(pubKey!.encrypt(questions))
-            let eD: string = forge.util.encode64(pubKey!.encrypt(description))
-            let eAS: string = forge.util.encode64(pubKey!.encrypt(applicantString))
-            setETitle(eT)
-            setEDescription(eD)
-            setEQuestions(eQ)
-            setEApplicantString(eAS)
+            // Random content
+            const randomBytesKey = forge.random.getBytesSync(32);
+            const randomBytesIV = forge.random.getBytesSync(32);
+            const bytesKey = forge.util.createBuffer(randomBytesKey);
+            const bytesIV = forge.util.createBuffer(randomBytesIV);
+            const stringKey = forge.util.bytesToHex(randomBytesKey);
+            const stringIV = forge.util.bytesToHex(randomBytesIV);
+            const storingAESCombiation = `${stringKey}@${stringIV}`;
+
+            // Storing random AES encrypted with RSA
+            let eAESContent: string = forge.util.encode64(pubKey!.encrypt(storingAESCombiation));
+            setEHashAES(eAESContent);
+
+            // Starting to encrypt content of Exam
+            if (randomBytesKey && randomBytesIV) {
+                // AES Encrypter with generated key
+                const cipher = forge.cipher.createCipher('AES-CBC', bytesKey);
+                // Convertir todos los inputs a bytes
+                const titleBytes = forge.util.createBuffer(title, 'utf8');
+                const descriptionBytes = forge.util.createBuffer(description, 'utf8');
+                const questionsBytes = forge.util.createBuffer(questions, 'utf8');
+                const applicantStringBytes = forge.util.createBuffer(applicantString, 'utf8');
+
+                // Empezando en encriptado
+                // Title
+                cipher.start({ iv: randomBytesIV });
+                cipher.update(titleBytes);
+                cipher.finish();
+                const eT = cipher.output.toHex();
+                setETitle(eT);
+                // Description
+                cipher.start({ iv: randomBytesIV });
+                cipher.update(descriptionBytes);
+                cipher.finish();
+                const eD = cipher.output.toHex();
+                setEDescription(eD)
+                // Questions
+                cipher.start({ iv: randomBytesIV });
+                cipher.update(questionsBytes);
+                cipher.finish();
+                const eQ = cipher.output.toHex();
+                setEQuestions(eQ);
+                // Applicant String
+                cipher.start({ iv: randomBytesIV });
+                cipher.update(applicantStringBytes);
+                cipher.finish();
+                const eAS = cipher.output.toHex();
+                setEApplicantString(eAS)
+            }
         }
-    }, [title, description, questions, applicantString])
+    }, [title, description, questions, applicantString, pubKey])
 
     const sendExam = async () => {
         let e: Exam = {
@@ -213,6 +252,10 @@ const ExamForm = () => {
                 <hr />
                 <h4>Encrypted RSA hash:</h4>
                 <p>{eHashRSA}</p>
+                <br />
+                <hr />
+                <h4>Encrypted AES hash:</h4>
+                <p>{eHashAES}</p>
                 <br />
                 <hr />
             </div>
