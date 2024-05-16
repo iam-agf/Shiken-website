@@ -5,6 +5,7 @@ import { EMessageType } from "../services/adena/adena.types";
 import config from "../config";
 import forge, { random } from 'node-forge';
 import { decryptMessage, encryptMessage } from "../pieces/supportFuns";
+import ExposeData from "./ExposeData";
 
 const ReadExam = () => {
     const [examId, setExamId] = useState<string>("")
@@ -24,6 +25,7 @@ const ReadExam = () => {
 
     // Input by user
     const [salt, setSalt] = useState<string>("")
+    const [wrongSalt, setWrongSalt] = useState<boolean>(false)
 
     // Decyphers the AES
     function DecryptExam() {
@@ -40,13 +42,15 @@ const ReadExam = () => {
                 shaIV
             );
             const parts = randomAES.split("@")
-            console.log(randomAES)
-            const hashAES = forge.util.hexToBytes(parts[0])
-            const ivAES = forge.util.hexToBytes(parts[1])
-            if (parts.length != 0) {
+            if (parts.length > 1) {
+                const hashAES = forge.util.hexToBytes(parts[0])
+                const ivAES = forge.util.hexToBytes(parts[1])
                 setExamTitle(decryptMessage(eTitle, hashAES, ivAES))
-                setEDescription(decryptMessage(eDescription, hashAES, ivAES))
-                setEQuestions(decryptMessage(eQuestions, hashAES, ivAES))
+                setExamDescription(decryptMessage(eDescription, hashAES, ivAES))
+                setExamQuestions(decryptMessage(eQuestions, hashAES, ivAES))
+                setWrongSalt(previous => true)
+            } else {
+                setWrongSalt(previous => false)
             }
         }
     }
@@ -109,32 +113,15 @@ const ReadExam = () => {
                 onChange={(e) => setSalt(e.target.value)}
             />
             <button type="button" onClick={() => { DecryptExam() }}>Decrypt</button>
-            <br />
-            <hr />
-            <h3>Title</h3>
-            {examTitle !== "" ? <p>{examTitle}</p> : <></>}
-            {eTitle}
-            <br />
-            <hr />
-            <h3>Description</h3>
-            {examDescription !== "" ? <p>{examDescription}</p> : <></>}
-            {eDescription}
-            <br />
+            {wrongSalt ? <></> : <p>Wrong Password!</p>}
+            <ExposeData title={"Title"} encryptedData={eTitle} decryptedData={examTitle} />
+            <ExposeData title={"Description"} encryptedData={eDescription} decryptedData={examDescription} />
+            <ExposeData title={"Questions"} encryptedData={eQuestions} decryptedData={examQuestions} />
             <hr />
             <h3>Applicants</h3>
-            {examApplicants !== "" ? <p>{examApplicants}</p> : <></>}
+            {examApplicants}
             <br />
             <hr />
-            <h3>Questions</h3>
-            {examQuestions !== "" ? <p>{examQuestions}</p> : <></>}
-            {eQuestions}
-            <br />
-            <hr />
-            <h3>Encrypted AES</h3>
-            {eHashAES !== "" ? <p>{eHashAES}</p> : <></>}
-            <br />
-            <hr />
-
         </>
     );
 };
