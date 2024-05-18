@@ -10,7 +10,7 @@ const ReadData = () => {
             return <ReadQuestion/>
         }
         if (QuestionOrExam == "Exam"){
-            return <ReadExam/>
+            return <ReadExam password=""/>
         }
     }
     return (
