@@ -17,24 +17,17 @@ const ExamForm = () => {
     const { address } = useContext(AccountContext)
 
     // Exam data
-    const [title, setTitle] = useState<string>("")
-    const [questions, setQuestions] = useState<string>("")
-    const [description, setDescription] = useState<string>("")
-    const [applicantString, setApplicantString] = useState<string>("")
+    const [examen, setExamen] = useState<Exam>({} as Exam)
 
     // Encryption values
     const [cryptoData, setCryptoData] = useState<Crypto>({ salt: "", randomAES: "" })
 
     // Encrypted exam data
-    const [eTitle, setETitle] = useState<string>(title)
-    const [eQuestions, setEQuestions] = useState<string>(questions)
-    const [eDescription, setEDescription] = useState<string>(description)
-    const [eHashAES, setEHashAES] = useState<string>(applicantString)
+    const [encriptedExamen, setEncriptedExamen] = useState<Exam>({} as Exam)
 
     function generateKeys() {
         const randomBytesKey = forge.random.getBytesSync(32);
         const randomBytesIV = forge.random.getBytesSync(32);
-        const bytesKey = forge.util.createBuffer(randomBytesKey);
 
         // For storing purposes
         const stringKey = forge.util.bytesToHex(randomBytesKey);
@@ -57,7 +50,8 @@ const ExamForm = () => {
             shaIV
         )
         // Then the encrypted content is set
-        setEHashAES(encriptedRandomAES);
+        setEncriptedExamen(prev => ({ ...prev, hashAES: encriptedRandomAES }));
+
     }
 
     useEffect(() => {
@@ -76,43 +70,30 @@ const ExamForm = () => {
 
         // Llama a la función para actualizar todas las variables secuencialmente
         updateVariablesSequentially();
-    }, [cryptoData.salt, title, questions, description])
+    }, [cryptoData.salt, examen])
 
     function encrypt(Key: string, randomBytesIV: string) {
-        const eT = setETitle(encryptMessage(title, Key, randomBytesIV));
-        const eD = setEDescription(encryptMessage(description, Key, randomBytesIV));
-        const eQ = setEQuestions(encryptMessage(questions, Key, randomBytesIV));
+        setEncriptedExamen(prev => ({ ...prev, title: encryptMessage(examen.title, Key, randomBytesIV) }));
+        setEncriptedExamen(prev => ({ ...prev, description: encryptMessage(examen.description, Key, randomBytesIV) }));
+        setEncriptedExamen(prev => ({ ...prev, questions: encryptMessage(examen.questions, Key, randomBytesIV) }));
     }
 
     const sendExam = async () => {
         if (cryptoData.salt.length === 0) {
             return
         }
-        let e: Exam = {
-            title: "",
-            description: "",
-            applicantString: "",
-            questions: "",
-        }
         // title verification
-        if (title.length < 5) {
+        if (examen.title.length < 5) {
             console.error("Size of title is very short")
-        } else {
-            e.title = title
         }
-
         // description verification
-        if (description.length < 5) {
+        if (examen.description.length < 5) {
             console.error("Size of description is very short")
-        } else {
-            e.description = description
         }
 
         // questions verification
-        if (questions.length < 1) {
+        if (examen.questions.length < 1) {
             console.error("Size of questions is very short")
-        } else {
-            e.questions = questions
         }
 
         if (address) {
@@ -126,11 +107,11 @@ const ExamForm = () => {
                             pkg_path: config.REALM_PATH,
                             func: 'AddExam',
                             args: [
-                                eTitle,
-                                eDescription,
-                                eQuestions,
-                                applicantString,
-                                eHashAES
+                                encriptedExamen.title,
+                                encriptedExamen.description,
+                                encriptedExamen.questions,
+                                examen.applicantString,
+                                encriptedExamen.hashAES,
                             ]
                         }
                     }
@@ -157,8 +138,8 @@ const ExamForm = () => {
                 <label>Enter your Title:
                     <input
                         type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        value={examen.title}
+                        onChange={(e) => setExamen(prev => ({ ...prev, title: e.target.value }))}
                     />
                 </label>
                 <br />
@@ -166,8 +147,8 @@ const ExamForm = () => {
                 <label>Enter your Description:
                     <input
                         type="text"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
+                        value={examen.description}
+                        onChange={(e) => setExamen(prev => ({ ...prev, description: e.target.value }))}
                     />
                 </label>
                 <br />
@@ -175,8 +156,8 @@ const ExamForm = () => {
                 <label>Enter your Questions:
                     <input
                         type="text"
-                        value={questions}
-                        onChange={(e) => setQuestions(e.target.value)}
+                        value={examen.questions}
+                        onChange={(e) => setExamen(prev => ({ ...prev, questions: e.target.value }))}
                     />
                 </label>
                 <br />
@@ -184,8 +165,8 @@ const ExamForm = () => {
                 <label>Enter your Applicants:
                     <input
                         type="text"
-                        value={applicantString}
-                        onChange={(e) => setApplicantString(e.target.value)}
+                        value={examen.applicantString}
+                        onChange={(e) => setExamen(prev => ({ ...prev, applicantString: e.target.value }))}
                     />
                 </label>
                 <br />
@@ -199,23 +180,23 @@ const ExamForm = () => {
                 <h2>You're sending</h2>
                 <hr />
                 <h4>Title: </h4>
-                <p>{eTitle}</p>
+                <p>{encriptedExamen.title}</p>
                 <br />
                 <hr />
                 <h4>Description: </h4>
-                <p>{eDescription}</p>
+                <p>{encriptedExamen.description}</p>
                 <br />
                 <hr />
                 <h4>Questions:</h4>
-                <p>{eQuestions}</p>
+                <p>{encriptedExamen.questions}</p>
                 <br />
                 <hr />
                 <h4>Applicants:</h4>
-                <p>{applicantString}</p>
+                <p>{examen.applicantString}</p>
                 <br />
                 <hr />
                 <h4>Encrypted AES hash:</h4>
-                <p>{eHashAES}</p>
+                <p>{encriptedExamen.hashAES}</p>
                 <br />
                 <hr />
             </div>

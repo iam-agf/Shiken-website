@@ -10,5 +10,6 @@ export interface Question {
     description : string;
     questions : string;
     applicantString : string;
+    hashAES: string;
   }
   

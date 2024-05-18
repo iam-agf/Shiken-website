@@ -10,6 +10,16 @@ export const parseResponse = (response: string): string => {
     return match[1];
 };
 
+export const parseJSONResponse = (response: string): string => {
+    let left = 0
+    let right = response.length
+    while (0 < right && response[right] != "\"") right -= 1
+    while (left < response.length && response[left] != "\{") left += 1
+    response = response.substring(left, right);
+    const content = response.replace(/\\/g, "");
+    return content
+}
+
 export function encryptMessage(data: string, secretKey: string, iv: string) {
     const input = forge.util.createBuffer(data);
     const cipherAES = forge.cipher.createCipher('AES-CBC', secretKey);

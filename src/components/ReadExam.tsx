@@ -4,32 +4,27 @@ import { AdenaService } from "../services/adena/adena";
 import { EMessageType } from "../services/adena/adena.types";
 import config from "../config";
 import forge, { random } from 'node-forge';
-import { decryptMessage, encryptMessage } from "../pieces/supportFuns";
+import { decryptMessage, encryptMessage, parseJSONResponse, parseResponse } from "../pieces/supportFuns";
 import ExposeData from "./ExposeData";
+import { Exam } from "../pieces/Realm.types";
 
-const ReadExam = () => {
+const ReadExam = ({ password }: { password: string }) => {
     const [examId, setExamId] = useState<string>("")
     const { address } = useContext(AccountContext)
 
     // Content for Exam
-    const [examTitle, setExamTitle] = useState<string>("")
-    const [examDescription, setExamDescription] = useState<string>("")
-    const [examQuestions, setExamQuestions] = useState<string>("")
-    const [examApplicants, setExamApplicants] = useState<string>("")
+    const [examen, setExamen] = useState<Exam>({ title: "", description: "", applicantString: "", hashAES: "", questions: "" })
 
     // Encrypted Content
-    const [eTitle, setETitle] = useState<string>("")
-    const [eDescription, setEDescription] = useState<string>("")
-    const [eQuestions, setEQuestions] = useState<string>("")
-    const [eHashAES, setEHashAES] = useState<string>("")
+    const [encryptedExamen, setEncryptedExamen] = useState<Exam>({ title: "", description: "", applicantString: "", hashAES: "", questions: "" })
 
     // Input by user
-    const [salt, setSalt] = useState<string>("")
+    const [salt, setSalt] = useState<string>(password)
     const [wrongSalt, setWrongSalt] = useState<boolean>(false)
 
     // Decyphers the AES
     function DecryptExam() {
-        if (eHashAES.length != 0 && salt !== "") {
+        if (encryptedExamen.hashAES.length != 0 && salt !== "") {
             const md = forge.md.sha256.create();
             md.update(salt);
             const shaString = md.digest().toHex();
@@ -37,7 +32,7 @@ const ReadExam = () => {
             const shaIV = shaString.substring(32, 64);
 
             const randomAES = decryptMessage(
-                eHashAES,
+                encryptedExamen.hashAES,
                 shaKey,
                 shaIV
             );
@@ -45,9 +40,9 @@ const ReadExam = () => {
             if (parts.length > 1) {
                 const hashAES = forge.util.hexToBytes(parts[0])
                 const ivAES = forge.util.hexToBytes(parts[1])
-                setExamTitle(decryptMessage(eTitle, hashAES, ivAES))
-                setExamDescription(decryptMessage(eDescription, hashAES, ivAES))
-                setExamQuestions(decryptMessage(eQuestions, hashAES, ivAES))
+                setExamen(prev => ({ ...prev, title: decryptMessage(encryptedExamen.title, hashAES, ivAES) }))
+                setExamen(prev => ({ ...prev, description: decryptMessage(encryptedExamen.description, hashAES, ivAES) }))
+                setExamen(prev => ({ ...prev, questions: decryptMessage(encryptedExamen.questions, hashAES, ivAES) }))
                 setWrongSalt(previous => true)
             } else {
                 setWrongSalt(previous => false)
@@ -77,21 +72,12 @@ const ReadExam = () => {
             )
             if (response) {
                 const data = response.deliver_tx.ResponseBase.Data
-                const content = Buffer.from(data!, 'base64').toString();
-                // Remove the (" and the ", string)
-                const pureAnswer = content.substring(2, content.length - 9);
-                const entries = pureAnswer.split("@");
-                if (entries.length != 0) {
-                    setETitle(entries[0])
-                    setEDescription(entries[1])
-                    setEQuestions(entries[2])
-                    setExamApplicants(entries[3])
-                    setEHashAES(entries[4])
-                    console.log({ entries, eTitle, eDescription, eQuestions, eHashAES })
-                }
+                const bufferedString = Buffer.from(data!, 'base64').toString();
+                const content = parseJSONResponse(bufferedString);
+                const examResponse = JSON.parse(content) as Exam;
+                setEncryptedExamen(examResponse);
             }
         }
-
     }
     return (
         <>
@@ -113,13 +99,14 @@ const ReadExam = () => {
                 onChange={(e) => setSalt(e.target.value)}
             />
             <button type="button" onClick={() => { DecryptExam() }}>Decrypt</button>
-            {wrongSalt ? <></> : <p>Wrong Password!</p>}
-            <ExposeData title={"Title"} encryptedData={eTitle} decryptedData={examTitle} />
-            <ExposeData title={"Description"} encryptedData={eDescription} decryptedData={examDescription} />
-            <ExposeData title={"Questions"} encryptedData={eQuestions} decryptedData={examQuestions} />
+            {wrongSalt == true && salt.length > 0 ? <p>Wrong Password!</p> : <></>}
+            {examId != "" ? <h3>Exam {examId}</h3> : <></>}
+            <ExposeData title={"Title"} encryptedData={encryptedExamen.title} decryptedData={examen.title} />
+            <ExposeData title={"Description"} encryptedData={encryptedExamen.description} decryptedData={examen.description} />
+            <ExposeData title={"Questions"} encryptedData={encryptedExamen.questions} decryptedData={examen.questions} />
             <hr />
             <h3>Applicants</h3>
-            {examApplicants}
+            {encryptedExamen.applicantString}
             <br />
             <hr />
         </>
