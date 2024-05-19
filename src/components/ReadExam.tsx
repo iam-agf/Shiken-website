@@ -40,9 +40,13 @@ const ReadExam = ({ password }: { password: string }) => {
             if (parts.length > 1) {
                 const hashAES = forge.util.hexToBytes(parts[0])
                 const ivAES = forge.util.hexToBytes(parts[1])
-                setExamen(prev => ({ ...prev, title: decryptMessage(encryptedExamen.title, hashAES, ivAES) }))
-                setExamen(prev => ({ ...prev, description: decryptMessage(encryptedExamen.description, hashAES, ivAES) }))
-                setExamen(prev => ({ ...prev, questions: decryptMessage(encryptedExamen.questions, hashAES, ivAES) }))
+                setExamen(prev => ({
+                    ...prev,
+                    title: decryptMessage(encryptedExamen.title, hashAES, ivAES),
+                    description: decryptMessage(encryptedExamen.description, hashAES, ivAES),
+                    questions: decryptMessage(encryptedExamen.questions, hashAES, ivAES)
+                })
+                )
                 setWrongSalt(previous => true)
             } else {
                 setWrongSalt(previous => false)
