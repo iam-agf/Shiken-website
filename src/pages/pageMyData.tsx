@@ -19,17 +19,16 @@ const PageMyData = () => {
 
     const [numberPendingExams, setNumberPendingExams] = useState<string | null>(null);
     const [examIds, setExamIds] = useState<string[]>([]);
+    const [dropCalled, setDropCalled] = useState<number>(0);
 
     useEffect(() => {
         if (provider !== null && address !== "") {
             const fetchData = async () => {
-                console.log(200, provider, address, provider && address != null)
                 if (provider && address != null) {
                     provider.evaluateExpression('gno.land/r/dev/shikenrepository', `GetPendingExams("${address}")`)
                         .then((pExams: any) => parseResponse(pExams))
                         .then((data: any) => {
                             setExamIds(JSON.parse(data));
-                            console.log({ data, examIds })
                         })
                         .catch((error: any) => console.log(error));
                     provider.evaluateExpression('gno.land/r/dev/shikenrepository', `GetNumberPendingExams("${address}")`)
@@ -40,10 +39,9 @@ const PageMyData = () => {
             };
             fetchData();
         }
-    }, [provider, address]);
+    }, [provider, address, dropCalled]);
 
     const DropExam = async (examId: string) => {
-
         if (address) {
             let response = await AdenaService.sendTransaction(
                 [
@@ -65,9 +63,10 @@ const PageMyData = () => {
             if (response) {
                 const data = response.deliver_tx.ResponseBase.Data
                 const bufferedString = Buffer.from(data!, 'base64').toString();
-                console.log(bufferedString)
             }
         }
+        setDropCalled(prev => prev + 1)
+        console.log(dropCalled);
     }
 
 
@@ -83,7 +82,7 @@ const PageMyData = () => {
                     </div>
                     <div>
                         <h3><IconFont icon="rs-iconnotice" /> Your Pending exams</h3>
-                        <p>You have {numberPendingExams} exams pending:</p>
+                        <p>You have {numberPendingExams} exam{numberPendingExams === "1" ? <></> : <>s</>} pending{numberPendingExams === "0" ? <></> : <>:</>}</p>
                         {examIds.length > 0 ? examIds.map((examId, _) => (
                             <>
                                 <li>
