@@ -22,16 +22,12 @@ const ExamEdit = () => {
 
     // Decrypted Exam data
     const [examen, setExamen] = useState<Exam>({} as Exam)
-
     // Encrypted exam data and new encrypted exam data
     const [encryptedExamen, setEncryptedExamen] = useState<Exam>(examen)
-
     // Edited content
-    const [updatedExamen, setUpdatedExamen] = useState<Exam>({} as Exam)
-
+    const [updatedReadableExamen, setUpdatedExamen] = useState<Exam>({} as Exam)
     // Edited content
     const [updatedEncryptedExamen, setUpdatedEncryptedExamen] = useState<Exam>({} as Exam)
-
     // Encryption values
     const [cryptoData, setCryptoData] = useState<Crypto>({ salt: "", randomAES: "" })
 
@@ -78,14 +74,14 @@ const ExamEdit = () => {
             }
         };
         updateVariablesSequentially();
-    }, [cryptoData.salt, updatedExamen])
+    }, [cryptoData.salt, updatedReadableExamen])
 
     function encrypt(Key: string, randomBytesIV: string) {
         setUpdatedEncryptedExamen(prev => ({
             ...prev,
-            title: encryptMessage(updatedExamen.title, Key, randomBytesIV),
-            description: encryptMessage(updatedExamen.description, Key, randomBytesIV),
-            questions: encryptMessage(updatedExamen.questions, Key, randomBytesIV),
+            title: encryptMessage(updatedReadableExamen.title, Key, randomBytesIV),
+            description: encryptMessage(updatedReadableExamen.description, Key, randomBytesIV),
+            questions: encryptMessage(updatedReadableExamen.questions, Key, randomBytesIV),
         }))
     }
 
@@ -126,23 +122,23 @@ const ExamEdit = () => {
             return
         }
         // title verification
-        if (updatedExamen.title.length < 5) {
-            if (updatedExamen.title.length == 0) {
+        if (updatedReadableExamen.title.length < 5) {
+            if (updatedReadableExamen.title.length == 0) {
                 setUpdatedEncryptedExamen(prev => ({ ...prev, title: encryptedExamen.title }))
             }
             console.error("Size of title is very short")
             return
         }
         // description verification
-        if (updatedExamen.description.length < 5) {
-            if (updatedExamen.description.length == 0) {
+        if (updatedReadableExamen.description.length < 5) {
+            if (updatedReadableExamen.description.length == 0) {
                 setUpdatedEncryptedExamen(prev => ({ ...prev, description: encryptedExamen.description }))
             }
             console.error("Size of description is very short")
         }
         // questions verification
-        if (updatedExamen.questions.length < 1) {
-            if (updatedExamen.questions.length == 0) {
+        if (updatedReadableExamen.questions.length < 1) {
+            if (updatedReadableExamen.questions.length == 0) {
                 setUpdatedEncryptedExamen(prev => ({ ...prev, questions: encryptedExamen.questions }))
             }
             console.error("Size of questions is very short")
@@ -170,6 +166,9 @@ const ExamEdit = () => {
                 ],
                 2000000
             )
+            if (response !== null){
+                console.log("Update sent!")
+            }
         }
     }
 
@@ -307,6 +306,7 @@ const ExamEdit = () => {
             <hr />
             <br />
             <button type="button" onClick={() => UpdateExam()}>Send Exam</button>
+
         </div>
     );
 };

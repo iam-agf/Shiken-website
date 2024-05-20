@@ -1,5 +1,5 @@
 import { FlexboxGrid } from "rsuite";
-import ExamEdit from "../components/ExamEdit";
+import ExamEdit from "../components/EditExam";
 import Header from "../components/Header";
 import FlexboxGridItem from "rsuite/esm/FlexboxGrid/FlexboxGridItem";
 
