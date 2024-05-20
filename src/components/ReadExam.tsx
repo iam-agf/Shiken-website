@@ -7,8 +7,10 @@ import forge, { random } from 'node-forge';
 import { decryptMessage, encryptMessage, parseJSONResponse, parseResponse } from "../pieces/supportFuns";
 import ExposeData from "./ExposeData";
 import { Exam } from "../pieces/Realm.types";
+import ProviderContext from "../context/ProviderContext";
 
 const ReadExam = ({ password }: { password: string }) => {
+    const { provider } = useContext(ProviderContext);
     const [examId, setExamId] = useState<string>("")
     const { address } = useContext(AccountContext)
 
@@ -47,42 +49,31 @@ const ReadExam = ({ password }: { password: string }) => {
                     questions: decryptMessage(encryptedExamen.questions, hashAES, ivAES)
                 })
                 )
-                setWrongSalt(previous => true)
+                setWrongSalt(prev => false)
             } else {
-                setWrongSalt(previous => false)
+                setWrongSalt(prev => true)
             }
         }
     }
 
     // Calls contract to get exam data
     const ReadExam = async () => {
-        if (address) {
-            let response = await AdenaService.sendTransaction(
-                [
-                    {
-                        type: EMessageType.MSG_CALL,
-                        value: {
-                            caller: address,
-                            send: '',
-                            pkg_path: config.REALM_PATH,
-                            func: 'ReadExam',
-                            args: [
-                                examId
-                            ]
-                        }
-                    }
-                ],
-                2000000
-            )
-            if (response) {
-                const data = response.deliver_tx.ResponseBase.Data
-                const bufferedString = Buffer.from(data!, 'base64').toString();
-                const content = parseJSONResponse(bufferedString);
-                const examResponse = JSON.parse(content) as Exam;
-                setEncryptedExamen(examResponse);
-            }
+        if (provider !== null && address !== "") {
+            const fetchData = async () => {
+                if (provider && address != null) {
+                    provider.evaluateExpression('gno.land/r/dev/shikenrepository', `ReadExam("${examId}")`)
+                        .then((response: any) => parseJSONResponse(response))
+                        .then((response: string) => JSON.parse(response) as Exam)
+                        .then((response: any) => {
+                            setEncryptedExamen(response);
+                        })
+                        .catch((error: any) => console.log(error));
+                };
+            };
+            fetchData();
         }
     }
+
     return (
         <>
             <label>Enter the Exam Id:

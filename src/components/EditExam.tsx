@@ -6,9 +6,10 @@ import AccountContext from "../context/AccountContext";
 import config from "../config";
 import forge, { random } from 'node-forge';
 import "../style.css"
-import { decryptMessage, encryptMessage, parseJSONResponse } from "../pieces/supportFuns";
+import { decryptMessage, encryptMessage, parseJSONResponse, parseResponse } from "../pieces/supportFuns";
 import { FlexboxGrid } from "rsuite";
 import FlexboxGridItem from "rsuite/esm/FlexboxGrid/FlexboxGridItem";
+import ProviderContext from "../context/ProviderContext";
 
 interface Crypto {
     salt: string,
@@ -17,6 +18,7 @@ interface Crypto {
 
 const ExamEdit = () => {
     const { address } = useContext(AccountContext)
+    const { provider } = useContext(ProviderContext);
     const [examId, setExamId] = useState<string>("")
     const [wrongSalt, setWrongSalt] = useState<boolean>(false)
 
@@ -25,48 +27,16 @@ const ExamEdit = () => {
     // Encrypted exam data and new encrypted exam data
     const [encryptedExamen, setEncryptedExamen] = useState<Exam>(examen)
     // Edited content
-    const [updatedReadableExamen, setUpdatedExamen] = useState<Exam>({} as Exam)
+    const [updatedReadableExamen, setUpdatedReadableExamen] = useState<Exam>({} as Exam)
     // Edited content
     const [updatedEncryptedExamen, setUpdatedEncryptedExamen] = useState<Exam>({} as Exam)
     // Encryption values
     const [cryptoData, setCryptoData] = useState<Crypto>({ salt: "", randomAES: "" })
 
-
-    function generateKeys() {
-        const randomBytesKey = forge.random.getBytesSync(32);
-        const randomBytesIV = forge.random.getBytesSync(32);
-        const bytesKey = forge.util.createBuffer(randomBytesKey);
-
-        // For storing purposes
-        const stringKey = forge.util.bytesToHex(randomBytesKey);
-        const stringIV = forge.util.bytesToHex(randomBytesIV);
-        const storingAESCombiation = `${stringKey}@${stringIV}`;
-        setCryptoData(prevState => ({ ...prevState, randomAES: storingAESCombiation }));
-        return
-    }
-
-    function encryptRandomAES(salt: string) {
-        // salt is SHA256-ed and used both parts to encrypt the randomAES
-        const md = forge.md.sha256.create();
-        md.update(cryptoData.salt);
-        const shaString = md.digest().toHex();
-        const shaKey = shaString.substring(0, 32);
-        const shaIV = shaString.substring(32, 64);
-        const encriptedRandomAES = encryptMessage(
-            cryptoData.randomAES,
-            shaKey,
-            shaIV
-        )
-        // Then the encrypted content is set
-        setExamen(prev => ({ ...prev, hashAES: encriptedRandomAES }));
-    }
-
     useEffect(() => {
-        // Función para actualizar todas las variables secuencialmente
         const updateVariablesSequentially = () => {
-            generateKeys();
+            // There is no need to refresh the hash. It's the same
             if (cryptoData.randomAES !== "" && cryptoData.salt !== "") {
-                encryptRandomAES(cryptoData.salt);
                 const parts = cryptoData.randomAES.split("@");
                 const bytesKey = forge.util.hexToBytes(parts[0]);
                 const randomBytesIV = forge.util.hexToBytes(parts[1]);
@@ -100,6 +70,7 @@ const ExamEdit = () => {
                 shaIV
             );
             const parts = randomAES.split("@")
+            setCryptoData(prev => ({ ...prev, randomAES: randomAES }))
             if (parts.length > 1) {
                 const hashAES = forge.util.hexToBytes(parts[0])
                 const ivAES = forge.util.hexToBytes(parts[1])
@@ -108,6 +79,8 @@ const ExamEdit = () => {
                     title: decryptMessage(encryptedExamen.title, hashAES, ivAES),
                     description: decryptMessage(encryptedExamen.description, hashAES, ivAES),
                     questions: decryptMessage(encryptedExamen.questions, hashAES, ivAES),
+                    applicantString: encryptedExamen.applicantString,
+                    hashAES: encryptedExamen.hashAES,
                 }))
                 setWrongSalt(prev => true)
             } else {
@@ -118,7 +91,7 @@ const ExamEdit = () => {
 
     // Calls contract to send updated exam data
     const UpdateExam = async () => {
-        if (cryptoData.salt.length === 0) {
+        if (cryptoData.salt.length === 0 || wrongSalt) {
             return
         }
         // title verification
@@ -143,7 +116,7 @@ const ExamEdit = () => {
             }
             console.error("Size of questions is very short")
         }
-
+        console.log({ updatedReadableExamen, updatedEncryptedExamen, examen, examId })
         if (address) {
             let response = await AdenaService.sendTransaction(
                 [
@@ -153,20 +126,20 @@ const ExamEdit = () => {
                             caller: address,
                             send: '',
                             pkg_path: config.REALM_PATH,
-                            func: 'UpdateExam',
+                            func: 'EditExam',
                             args: [
-                                encryptedExamen.title,
-                                encryptedExamen.description,
-                                encryptedExamen.questions,
+                                examId,
+                                updatedEncryptedExamen.title,
+                                updatedEncryptedExamen.description,
+                                updatedEncryptedExamen.questions,
                                 examen.applicantString,
-                                encryptedExamen.hashAES,
                             ]
                         }
                     }
                 ],
                 2000000
             )
-            if (response !== null){
+            if (response !== null) {
                 console.log("Update sent!")
             }
         }
@@ -174,34 +147,22 @@ const ExamEdit = () => {
 
     // Calls contract to get exam data
     const ReadExam = async () => {
-        if (address) {
-            let response = await AdenaService.sendTransaction(
-                [
-                    {
-                        type: EMessageType.MSG_CALL,
-                        value: {
-                            caller: address,
-                            send: '',
-                            pkg_path: config.REALM_PATH,
-                            func: 'ReadExam',
-                            args: [
-                                examId
-                            ]
-                        }
-                    }
-                ],
-                2000000
-            )
-            if (response) {
-                const data = response.deliver_tx.ResponseBase.Data
-                const bufferedString = Buffer.from(data!, 'base64').toString();
-                const content = parseJSONResponse(bufferedString);
-                const examResponse = JSON.parse(content) as Exam;
-                setEncryptedExamen(examResponse);
-            }
+        if (provider !== null && address !== "") {
+            const fetchData = async () => {
+                if (provider && address != null) {
+                    provider.evaluateExpression('gno.land/r/dev/shikenrepository', `ReadExam("${examId}")`)
+                        .then((response: any) => parseJSONResponse(response))
+                        .then((response: string) => JSON.parse(response) as Exam)
+                        .then((response: any) => {
+                            setEncryptedExamen(response);
+                        })
+                        .catch((error: any) => console.log(error));
+                };
+            };
+            fetchData();
         }
-
     }
+
     return (
         <div>
             <br />
@@ -224,7 +185,6 @@ const ExamEdit = () => {
                     />
                 </label>
                 <button type="button" onClick={() => { DecryptExam() }}>Decrypt</button>
-
                 <br />
                 <hr />
                 <div>
@@ -244,7 +204,7 @@ const ExamEdit = () => {
                             <div style={{ display: "flex", flexDirection: "column" }}>
                                 <input
                                     type="text"
-                                    onChange={(e) => setUpdatedExamen(prev => ({ ...prev, title: e.target.value }))}
+                                    onChange={(e) => setUpdatedReadableExamen(prev => ({ ...prev, title: e.target.value }))}
                                     placeholder="New Title"
                                 />
                                 <p>{updatedEncryptedExamen.title}</p>
@@ -269,7 +229,7 @@ const ExamEdit = () => {
                             <div style={{ display: "flex", flexDirection: "column" }}>
                                 <input
                                     type="text"
-                                    onChange={(e) => setUpdatedExamen(prev => ({ ...prev, description: e.target.value }))}
+                                    onChange={(e) => setUpdatedReadableExamen(prev => ({ ...prev, description: e.target.value }))}
                                     placeholder="New Description"
                                 />
                                 <p>{updatedEncryptedExamen.description}</p>
@@ -294,7 +254,7 @@ const ExamEdit = () => {
                             <div style={{ display: "flex", flexDirection: "column" }}>
                                 <input
                                     type="text"
-                                    onChange={(e) => setUpdatedExamen(prev => ({ ...prev, questions: e.target.value }))}
+                                    onChange={(e) => setUpdatedReadableExamen(prev => ({ ...prev, questions: e.target.value }))}
                                     placeholder="New Questions"
                                 />
                                 <p>{updatedEncryptedExamen.questions}</p>
