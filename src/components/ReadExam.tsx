@@ -1,10 +1,7 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import AccountContext from "../context/AccountContext";
-import { AdenaService } from "../services/adena/adena";
-import { EMessageType } from "../services/adena/adena.types";
-import config from "../config";
-import forge, { random } from 'node-forge';
-import { decryptMessage, encryptMessage, parseJSONResponse, parseResponse } from "../pieces/supportFuns";
+import forge from 'node-forge';
+import { decryptMessage, parseJSONResponse } from "../pieces/supportFuns";
 import ExposeData from "./ExposeData";
 import { Exam } from "../pieces/Realm.types";
 import ProviderContext from "../context/ProviderContext";

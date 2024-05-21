@@ -1,17 +1,12 @@
 import { useContext, useEffect, useState } from "react";
-import { Exam } from "../pieces/Realm.types";
+import { Exam, Crypto } from "../pieces/Realm.types";
 import { AdenaService } from "../services/adena/adena";
 import { EMessageType } from "../services/adena/adena.types";
 import AccountContext from "../context/AccountContext";
 import config from "../config";
-import forge, { random } from 'node-forge';
+import forge from 'node-forge';
 import "../style.css"
-import { decryptMessage, encryptMessage } from "../pieces/supportFuns";
-
-interface Crypto {
-    salt: string,
-    randomAES: string
-}
+import { encryptMessage } from "../pieces/supportFuns";
 
 const ExamForm = () => {
     const { address } = useContext(AccountContext)

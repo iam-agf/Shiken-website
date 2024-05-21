@@ -4,7 +4,7 @@ import { AdenaService } from "../services/adena/adena";
 import { EMessageType } from "../services/adena/adena.types";
 import AccountContext from "../context/AccountContext";
 import config from "../config";
-import forge, { random } from 'node-forge';
+import forge from 'node-forge';
 import "../style.css"
 import { decryptMessage, encryptMessage, parseJSONResponse, parseResponse } from "../pieces/supportFuns";
 import { FlexboxGrid } from "rsuite";
