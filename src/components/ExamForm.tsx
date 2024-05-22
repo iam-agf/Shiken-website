@@ -32,7 +32,7 @@ const ExamForm = () => {
         return
     }
 
-    function encryptRandomAES(salt: string) {
+    function encryptRandomAES() {
         // salt is SHA256-ed and used both parts to encrypt the randomAES
         const md = forge.md.sha256.create();
         md.update(cryptoData.salt);
@@ -46,7 +46,6 @@ const ExamForm = () => {
         )
         // Then the encrypted content is set
         setEncriptedExamen(prev => ({ ...prev, hashAES: encriptedRandomAES }));
-
     }
 
     useEffect(() => {
@@ -54,7 +53,7 @@ const ExamForm = () => {
         const updateVariablesSequentially = () => {
             generateKeys();
             if (cryptoData.randomAES !== "" && cryptoData.salt !== "") {
-                encryptRandomAES(cryptoData.salt);
+                encryptRandomAES();
                 const parts = cryptoData.randomAES.split("@");
                 const bytesKey = forge.util.hexToBytes(parts[0]);
                 const randomBytesIV = forge.util.hexToBytes(parts[1]);

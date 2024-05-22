@@ -22,7 +22,7 @@ const QuestionForm = () => {
     const [encryptedQuestion, setEncryptedQuestion] = useState<Question>({
         topic: "",
         statement: "",
-        kind: "",
+        kind: "1",
         options: "",
         answer: "",
         hashAES: "",
@@ -65,12 +65,12 @@ const QuestionForm = () => {
             setOption4("")
             setQuestion(prev => ({ ...prev, options: "", answer: "" }))
         }
+        setEncryptedQuestion(prev => ({ ...prev, kind: question.kind }))
     }, [question.kind])
 
     // AES key for user
     useEffect(() => {
         generateKeys()
-        console.log({ cryptoData })
         if (cryptoData.randomAES !== "" && cryptoData.salt !== "") {
             encryptRandomAES();
             const parts = cryptoData.randomAES.split("@");
@@ -114,7 +114,6 @@ const QuestionForm = () => {
             topic: encryptMessage(question.topic, Key, randomBytesIV),
             statement: encryptMessage(question.statement, Key, randomBytesIV),
             options: encryptMessage(question.options, Key, randomBytesIV),
-            kind: encryptMessage(question.kind, Key, randomBytesIV),
             answer: encryptMessage(question.answer, Key, randomBytesIV),
         }));
     }
