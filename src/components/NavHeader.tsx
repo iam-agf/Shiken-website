@@ -14,7 +14,6 @@ export const NavHeader = ({ active, onSelect }: { active: string, onSelect: (eve
                 <Nav.Item href="/myData">My data</Nav.Item>
                 <Nav.Item href="/howTo">How to</Nav.Item>
                 <Nav.Item href="/addQuestion">Add Question</Nav.Item>
-                <Nav.Item href="/editQuestion">Edit Question</Nav.Item>
                 <Nav.Item href="/addExam">Add Exam</Nav.Item>
                 <Nav.Item href="/editExam">Edit Exam</Nav.Item>
                 <Nav.Item href="/readData">Read Data</Nav.Item>

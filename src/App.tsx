@@ -14,7 +14,6 @@ import PageMyData from './pages/pageMyData';
 import PageHowTo from './pages/pageHowTo';
 import PageAddQuestion from './pages/pageAddQuestion';
 import PageAddExam from './pages/pageAddExam';
-import PageEditQuestion from './pages/pageEditQuestion';
 import PageEditExam from './pages/pageEditExam';
 import PageReadData from './pages/pageReadData';
 import {
@@ -68,10 +67,6 @@ const App = () => {
     {
       path: "/addQuestion",
       element: <PageAddQuestion />,
-    },
-    {
-      path: "/editQuestion",
-      element: <PageEditQuestion />,
     },
     {
       path: "/addExam",

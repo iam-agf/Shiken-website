@@ -16,7 +16,7 @@ interface Crypto {
     randomAES: string
 }
 
-const ExamEdit = () => {
+const EditExam = () => {
     const { address } = useContext(AccountContext)
     const { provider } = useContext(ProviderContext);
     const [examId, setExamId] = useState<string>("")
@@ -271,4 +271,4 @@ const ExamEdit = () => {
     );
 };
 
-export default ExamEdit;
+export default EditExam;
