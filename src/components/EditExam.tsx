@@ -91,7 +91,7 @@ const EditExam = () => {
 
     // Calls contract to send updated exam data
     const UpdateExam = async () => {
-        if (cryptoData.salt.length === 0 || wrongSalt) {
+        if (cryptoData.salt.length === 0 || !wrongSalt) {
             return
         }
         // title verification
