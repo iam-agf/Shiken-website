@@ -6,7 +6,7 @@ import AccountContext from "../context/AccountContext";
 import config from "../config";
 import forge from 'node-forge';
 import "../style.css"
-import { decryptMessage, encryptMessage, parseJSONResponse, parseResponse } from "../pieces/supportFuns";
+import { decryptMessage, encryptMessage, parseJSONResponse } from "../pieces/supportFuns";
 import { FlexboxGrid } from "rsuite";
 import FlexboxGridItem from "rsuite/esm/FlexboxGrid/FlexboxGridItem";
 import ProviderContext from "../context/ProviderContext";
@@ -57,7 +57,7 @@ const EditExam = () => {
 
     // Decyphers the AES
     function DecryptExam() {
-        if (encryptedExamen.hashAES.length != 0 && cryptoData.salt !== "") {
+        if (encryptedExamen.hashAES.length !== 0 && cryptoData.salt !== "") {
             const md = forge.md.sha256.create();
             md.update(cryptoData.salt);
             const shaString = md.digest().toHex();
@@ -96,7 +96,7 @@ const EditExam = () => {
         }
         // title verification
         if (updatedReadableExamen.title.length < 5) {
-            if (updatedReadableExamen.title.length == 0) {
+            if (updatedReadableExamen.title.length === 0) {
                 setUpdatedEncryptedExamen(prev => ({ ...prev, title: encryptedExamen.title }))
             }
             console.error("Size of title is very short")
@@ -104,14 +104,14 @@ const EditExam = () => {
         }
         // description verification
         if (updatedReadableExamen.description.length < 5) {
-            if (updatedReadableExamen.description.length == 0) {
+            if (updatedReadableExamen.description.length === 0) {
                 setUpdatedEncryptedExamen(prev => ({ ...prev, description: encryptedExamen.description }))
             }
             console.error("Size of description is very short")
         }
         // questions verification
         if (updatedReadableExamen.questions.length < 1) {
-            if (updatedReadableExamen.questions.length == 0) {
+            if (updatedReadableExamen.questions.length === 0) {
                 setUpdatedEncryptedExamen(prev => ({ ...prev, questions: encryptedExamen.questions }))
             }
             console.error("Size of questions is very short")
@@ -149,7 +149,7 @@ const EditExam = () => {
     const ReadExam = async () => {
         if (provider !== null && address !== "") {
             const fetchData = async () => {
-                if (provider && address != null) {
+                if (provider && address !== null) {
                     provider.evaluateExpression('gno.land/r/dev/shikenrepository', `ReadExam("${examId}")`)
                         .then((response: any) => parseJSONResponse(response))
                         .then((response: string) => JSON.parse(response) as Exam)

@@ -1,20 +1,9 @@
-import { FlexboxGrid } from "rsuite";
-import Header from "../components/Header";
+import DefaultView from "../components/DefaultView";
 import ExamForm from "../components/ExamForm";
-import FlexboxGridItem from "rsuite/esm/FlexboxGrid/FlexboxGridItem";
 
 const PageAddExam = () => {
     return (
-        <>
-            <Header />
-            <FlexboxGrid>
-                <FlexboxGridItem colspan={6}/>
-                <FlexboxGridItem colspan={12}>
-                    <ExamForm/>
-                </FlexboxGridItem>
-                <FlexboxGridItem colspan={6}/>
-            </FlexboxGrid>
-        </>
+        <DefaultView component={ExamForm}/>
     );
 };
 
