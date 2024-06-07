@@ -1,12 +1,10 @@
-import Header from "../components/Header";
+import DefaultView from "../components/DefaultView";
 
 const PageApply = () => {
     return (
-        <>
-            apply
-            <Header />
-        </>
+        <DefaultView component={TmpApply} />
     );
 };
+const TmpApply = () => {return (<h1>Tmp Apply</h1>);};
 
 export default PageApply;

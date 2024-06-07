@@ -1,12 +1,11 @@
-import Header from "../components/Header";
+import DefaultView from "../components/DefaultView";
 
 const PageHome = () => {
     return (
-        <>
-            home
-            <Header />
-        </>
+        <DefaultView component={TmpHome}/>
     );
 };
+
+const TmpHome = () => {return (<h1>Tmp Home</h1>);};
 
 export default PageHome;
