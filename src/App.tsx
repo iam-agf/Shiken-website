@@ -21,6 +21,8 @@ import {
   RouterProvider,
 } from "react-router-dom"
 
+import 'rsuite/dist/rsuite.min.css';
+
 const App = () => {
   const [address, setAddress] = useState<string | null>(null);
   const [chainID, setChainID] = useState<string | null>(null);
